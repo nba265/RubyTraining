@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'faraday'
 require 'json'
 
 class User
@@ -26,5 +25,9 @@ class User
 
   def to_json(*_args)
     { id: @id, name: @name, avatar: @avatar, sex: @sex, active: @active, created_at: @created_at }.to_json
+  end
+
+  def to_a
+    [@id, @name, @avatar, @sex, @active, @created_at]
   end
 end

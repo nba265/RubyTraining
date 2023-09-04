@@ -2,8 +2,9 @@
 
 require 'rubygems'
 require 'zip'
-require 'htmltoword'
+require 'caracal'
 require_relative 'api_service'
+require_relative 'drive_service'
 
 def active_users(api_service)
   puts 'GET ALL ACTIVE USERS  '.center(50, '-')
@@ -72,64 +73,49 @@ end
 
 def export_to_doc(users)
   puts 'EXPORT TO DOC'.center(50, '-')
-  html = <<-HTML
-  <html>
-    <head>
-    </head>
-    <body>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Avatar</th>
-            <th>Sex</th>
-            <th>Active</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-          #{users.map do |user|
-            "<tr>
-              <td>#{user.id}</td>
-              <td>#{user.name}</td>
-              <td>#{user.avatar}</td>
-              <td>#{user.sex}</td>
-              <td>#{user.active}</td>
-              <td>#{user.created_at}</td>
-            </tr>"
-          end.join("\n")}
-        </tbody>
-      </table>
-    </body>
-  </html>
-  HTML
-  html += '</table></body></html>'
-  output_path = '/home/baoanh/Documents/doc_file/users.doc'
-  Htmltoword::Document.create(html)
-  Htmltoword::Document.create_and_save(html, output_path)
+  doc = Caracal::Document.new('/home/baoanh/Documents/doc_file/users.doc')
+
+  doc.p text: 'Users List', align: :center, b: true, size: 24
+
+  users_array = users.map(&:to_a).unshift(['ID', 'Name', 'Avatar', 'Sex', 'Active', 'Created At'])
+  doc.table users_array, border_size: 4 do
+    cell_style rows[0], background: '3366cc', color: 'ffffff', bold: true
+  end
+  doc.save
 
   puts 'EXPORT SUCCESSFUL'.center(50, '-')
 rescue StandardError => e
   puts "Error: #{e.message}"
 end
 
-def export_to_doc_and_zip(users)
+def export_to_doc_and_zip(users, output_zip)
   puts 'EXPORT TO DOC AND ZIP'.center(50, '-')
   export_to_doc(users)
   source_file = '/home/baoanh/Documents/doc_file/users.doc'
-  output_zip = '/home/baoanh/Documents/doc_file/users.zip'
 
   Zip::File.open(output_zip, Zip::File::CREATE) do |zipfile|
     zipfile.add('users.doc', source_file)
   end
 
-  puts "Zip file created: #{output_zip}".center(50, '-')
+  puts "ZIP FILE CREATED: #{output_zip}".center(50, '-')
+rescue StandardError => e
+  puts "Error: #{e.message}"
+end
+
+def upload_to_drive(drive_service, local_file_path, remote_file_path)
+  puts 'UPLOAD TO GOOGLE DRIVE'.center(50, '-')
+  drive_service.upload_file(local_file_path, remote_file_path)
+
+  puts 'UPLOAD SUCCESSFUL'.center(50, '-')
 rescue StandardError => e
   puts "Error: #{e.message}"
 end
 
 def menu
+  output_zip = '/home/baoanh/Documents/doc_file/users.zip'
+  credentials_json_path = '/home/baoanh/Documents/Github/config.json'
+  remote_file_path = 'users.zip'
+  drive_service = DriveService.new(credentials_json_path)
   api_service = ApiService.new
   puts "1-Get all active users\n2-Create new user\n3-Edit User\n4-Delete User\nOther-Exit"
 
@@ -139,13 +125,15 @@ def menu
     case number
     when '1'
       users = active_users(api_service)
-      puts "1-Export to doc\n2-Export to doc and zip it\nOther-Return"
+      puts "1-Export to doc\n2-Export to doc and zip it\n3-Upload zip to google drive\nOther-Return"
       choice = gets.chomp
       case choice
       when '1'
         export_to_doc(users)
       when '2'
-        export_to_doc_and_zip(users)
+        export_to_doc_and_zip(users, output_zip)
+      when '3'
+        upload_to_drive(drive_service, output_zip, remote_file_path)
       else
         next
       end

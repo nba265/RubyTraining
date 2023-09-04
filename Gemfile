@@ -4,10 +4,12 @@ source 'https://rubygems.org'
 
 gem 'rubocop', require: false
 
-gem 'faraday'
-
 gem 'mojinizer'
 
-gem 'docx'
+gem 'rubyzip', '~> 1.1', '>= 1.1.7'
 
-gem 'htmltoword'
+gem 'google_drive', '~> 3.0', '>= 3.0.7'
+
+gem 'faraday', '~> 1.10', '>= 1.10.3'
+
+gem 'caracal'

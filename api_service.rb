@@ -6,9 +6,9 @@ require_relative 'user'
 
 # Create API service
 class ApiService
-  @@api_url = 'https://6418014ee038c43f38c45529.mockapi.io/api/v1/'
   def initialize
-    @conn = Faraday.new(url: @@api_url)
+    @api_url = 'https://6418014ee038c43f38c45529.mockapi.io/api/v1/'
+    @conn = Faraday.new(url: @api_url)
   end
 
   def users_active
@@ -68,5 +68,3 @@ class ApiService
     User.new(user_data.transform_keys(&:to_sym))
   end
 end
-
-

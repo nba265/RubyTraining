@@ -184,10 +184,4 @@ rescue StandardError => e
   puts "Error: #{e.message}"
 end
 
-#menu
-
-api_service = ApiService.new
-
-for id in 60..140 do
-  delete_user(api_service,id)
-end
+menu

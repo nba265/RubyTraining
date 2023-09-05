@@ -2,6 +2,7 @@
 
 require 'json'
 
+# Create Model User
 class User
   attr_accessor :id, :name, :avatar, :sex, :active, :created_at
 

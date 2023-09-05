@@ -2,7 +2,6 @@
 
 require 'json'
 
-# User model
 class User
   attr_accessor :id, :name, :avatar, :sex, :active, :created_at
 
@@ -16,12 +15,12 @@ class User
   end
 
   def to_s
-    "- Id: #{@id}\n
-     - Name: #{@name}\n
-     - Avatar: #{@avatar}\n
-     - Sex: #{@sex}\n
-     - Active: #{@active}\n
-     - Create at: #{@created_at}\n"
+    "- Id: #{@id}
+     - Name: #{@name}
+     - Avatar: #{@avatar}
+     - Sex: #{@sex}
+     - Active: #{@active}
+     - Create at: #{@created_at}"
   end
 
   def to_json(*_args)

@@ -3,6 +3,7 @@
 require 'rubygems'
 require 'zip'
 require 'caracal'
+require 'csv'
 require_relative 'api_service'
 require_relative 'drive_service'
 
@@ -26,11 +27,10 @@ def create_user(api_service)
   print 'Enter your avatar link: '
   avatar = gets.chomp
   puts ''
-  raise 'The Parameter is Incorrect, try again!' unless !name.empty? &&
-                                                        %w[male female].include?(sex) &&
-                                                        %w[true false].include?(active)
+  new_user = User.new({ name: name, sex: sex, active: active, avatar: avatar })
+  raise 'The Parameter is Incorrect, try again!' unless valid_user?(new_user)
 
-  new_user = User.new({ name: name, sex: sex, active: active == 'true', avatar: avatar })
+  new_user.active = active == 'true'
   create_new_user = api_service.create_user(new_user)
 
   puts "Create new user: #{create_new_user}"
@@ -49,12 +49,10 @@ def edit_user(api_service, id)
   print 'Enter your avatar link: '
   avatar = gets.chomp
   puts ''
-  raise 'The Parameter is Incorrect, try again!' unless !name.empty? &&
-                                                        %w[male female].include?(sex) &&
-                                                        %w[true false].include?(active)
+  user = User.new({ name: name, sex: sex, active: active, avatar: avatar })
+  raise 'The Parameter is Incorrect, try again!' unless valid_user?(user)
 
-  user = User.new({ name: name, sex: sex, active: active == 'true', avatar: avatar })
-  p user.to_s
+  user.active = active == 'true'
   edit_user = api_service.edit_user_by_id(user, id.to_i)
 
   puts "Edit user: #{edit_user}"
@@ -111,13 +109,42 @@ rescue StandardError => e
   puts "Error: #{e.message}"
 end
 
+def import_users_from_csv(api_service, csv_data)
+  CSV.foreach(csv_data, headers: true) do |row|
+    user = User.new({ name: row['name'],
+                      avatar: row['avatar'],
+                      sex: row['sex'],
+                      active: row['active'],
+                      created_at: row['created_at'] })
+    raise 'The Parameter is Incorrect, try again!' unless valid_user?(user)
+
+    user.active = row['active'] == 'true'
+    api_service.create_user(user)
+  end
+
+  puts 'IMPORT SUCCESSFUL'.center(50, '-')
+rescue StandardError => e
+  puts "Error: #{e.message}"
+end
+
+def valid_user?(user)
+  !user.name.empty? && %w[true false].include?(user.active) && %w[male female].include?(user.sex)
+end
+
 def menu
   output_zip = '/home/baoanh/Documents/doc_file/users.zip'
   credentials_json_path = '/home/baoanh/Documents/Github/config.json'
   remote_file_path = 'users.zip'
+  csv_data = 'users.csv'
   drive_service = DriveService.new(credentials_json_path)
   api_service = ApiService.new
-  puts "1-Get all active users\n2-Create new user\n3-Edit User\n4-Delete User\nOther-Exit"
+  puts "
+  1-Get all active users
+  2-Create new user
+  3-Edit User
+  4-Delete User
+  5-Import list users from .csv
+  Other-Exit"
 
   loop do
     puts 'Enter number: '
@@ -147,6 +174,8 @@ def menu
       print 'Enter delete id: '
       id_del = gets.chomp
       delete_user(api_service, id_del)
+    when '5'
+      import_users_from_csv(api_service, csv_data)
     else
       break
     end
@@ -155,4 +184,10 @@ rescue StandardError => e
   puts "Error: #{e.message}"
 end
 
-menu
+#menu
+
+api_service = ApiService.new
+
+for id in 60..140 do
+  delete_user(api_service,id)
+end

@@ -2,6 +2,7 @@
 
 require 'google_drive'
 
+# Class to interact with google drive
 class DriveService
   def initialize(credentials_json_path)
     @session = GoogleDrive::Session.from_config(credentials_json_path)

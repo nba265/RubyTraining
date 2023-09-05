@@ -4,6 +4,7 @@ require 'faraday'
 require 'json'
 require_relative 'user'
 
+# Create API service
 class ApiService
   @@api_url = 'https://6418014ee038c43f38c45529.mockapi.io/api/v1/'
   def initialize
